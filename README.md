@@ -1,2 +1,8 @@
 # mqlite
-A tiny message queuing system based on HTTP requests.
+
+A SQLite3 wrapper to mock some AMQP functionality.
+
+## Version 0.1
+
+
+
