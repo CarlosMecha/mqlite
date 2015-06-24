@@ -104,7 +104,9 @@ describe('Connection', function(){
             var mq = new mqlite.Connection();
 
             async.waterfall([
-                mq.listen,
+                function(callback) {
+                    mq.listen(callback);
+                },
                 function(callback) {
                     mq.push(topic, format, payload, callback);
                 },
@@ -126,7 +128,9 @@ describe('Connection', function(){
                         }
                     });
                 },
-                mq.close
+                function(callback) {
+                    mq.close(callback);
+                }
             ], function(err) {
                 expect(err).to.not.exists;
                 done();
@@ -140,15 +144,17 @@ describe('Connection', function(){
             var payload = {foo: 'foo-test'};
 
             var mq = new mqlite.Connection();
-            mq.encoders = { format : function(obj) {
+            mq.encoders = { 'custom' : function(obj) {
                 return "1" + JSON.stringify(obj);
             }};
-            mq.decoders = { format : function(obj) {
+            mq.decoders = { 'custom' : function(obj) {
                 return JSON.parse(obj.substring(1));
             }};
 
             async.waterfall([
-                mq.listen,
+                function(callback) {
+                    mq.listen(callback);
+                },
                 function(callback) {
                     mq.push(topic, format, payload, callback);
                 },
@@ -170,7 +176,9 @@ describe('Connection', function(){
                         }
                     });
                 },
-                mq.close
+                function(callback) {
+                    mq.close(callback);
+                }
             ], function(err) {
                 expect(err).to.not.exists;
                 done();
@@ -191,7 +199,9 @@ describe('Connection', function(){
             var mq = new mqlite.Connection();
 
             async.waterfall([
-                mq.listen,
+                function(callback) {
+                    mq.listen(callback);
+                },
                 function(callback) {
                     var db = mq._db;
                     db.run(
@@ -230,7 +240,9 @@ describe('Connection', function(){
                     expect(res).to.have.length(limit);
                     callback();
                 },
-                mq.close
+                function(callback) {
+                    mq.close(callback);
+                }
             ], function(err) {
                 expect(err).to.not.exists;
                 done();
@@ -246,20 +258,22 @@ describe('Connection', function(){
             var limit = 1;
 
             var mq = new mqlite.Connection();
-            mq.encoders = { format : function(obj) {
+            mq.encoders = { 'custom' : function(obj) {
                 return "1" + JSON.stringify(obj);
             }};
-            mq.decoders = { format : function(obj) {
+            mq.decoders = { 'custom' : function(obj) {
                 return JSON.parse(obj.substring(1));
             }};
 
             async.waterfall([
-                mq.listen,
+                function(callback) {
+                    mq.listen(callback);
+                },
                 function(callback) {
                     var db = mq._db;
                     db.run(
                         'INSERT INTO notifications (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
-                        uuid, topic, timestamp, format, JSON.stringify(payload), callback
+                        uuid, topic, timestamp, format, mq.encoders.custom(payload), callback
                     );
                 },
                 function(callback) {
@@ -279,10 +293,6 @@ describe('Connection', function(){
                     expect(notif.format).to.be.ok;
                     expect(notif.format).to.equals(format);
                     expect(notif.payload).to.be.ok;
-                    var obj = JSON.parse(notif.payload.substring(1));
-                    expect(obj).to.be.ok;
-                    expect(obj.foo).to.be.ok;
-                    expect(obj.foo).to.equals(payload.foo);
                     callback();
                 },
                 function(callback) {
@@ -293,7 +303,9 @@ describe('Connection', function(){
                     expect(res).to.have.length(limit);
                     callback();
                 },
-                mq.close
+                function(callback) {
+                    mq.close(callback);
+                }
             ], function(err) {
                 expect(err).to.not.exists;
                 done();
@@ -336,7 +348,9 @@ describe('Connection', function(){
             }
 
             async.waterfall([
-                mq.listen,
+                function(callback) {
+                    mq.listen(callback);
+                },
                 function(callback) {
                     var db = mq._db;
                     db.run(
@@ -348,7 +362,9 @@ describe('Connection', function(){
                 check,
                 get,
                 check,
-                mq.close
+                function(callback) {
+                    mq.close(callback);
+                }
             ], function(err) {
                 expect(err).to.not.exists;
                 done();
@@ -367,7 +383,9 @@ describe('Connection', function(){
             var mq = new mqlite.Connection();
 
             async.waterfall([
-                mq.listen,
+                function(callback) {
+                    mq.listen(callback);
+                },
                 function(callback) {
                     var db = mq._db;
                     db.run(
@@ -406,7 +424,9 @@ describe('Connection', function(){
                     expect(res).to.have.length(0);
                     callback();
                 },
-                mq.close
+                function(callback) {
+                    mq.close(callback);
+                }
             ], function(err) {
                 expect(err).to.not.exists;
                 done();
