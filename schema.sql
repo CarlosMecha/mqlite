@@ -1,5 +1,5 @@
 
-CREATE TABLE notifications(
+CREATE TABLE messages(
     uuid TEXT NOT NULL PRIMARY KEY,
     timestamp INTEGER NOT NULL,
     format TEXT NOT NULL,
@@ -7,5 +7,5 @@ CREATE TABLE notifications(
     payload TEXT
 );
 
-CREATE INDEX notifications_index ON notifications (uuid, timestamp, topic);
+CREATE INDEX messages_index ON messages (uuid, timestamp, topic);
 

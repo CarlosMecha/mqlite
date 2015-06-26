@@ -5,12 +5,12 @@ var expect = require('chai').expect;
 var uuidGenerator = require('node-uuid');
 var sys = require('sys');
 
-var mqlite = require('../mqlite');
+var Connection = require('../lib/connection');
 
 describe('Connection', function(){
     describe('initializes the ephemeral database', function() {
         it('creates the database', function(done){
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
             mq.listen(function(err){
                 expect(err).to.not.exists;
                 expect(mq._db.open).to.be.true;
@@ -19,12 +19,12 @@ describe('Connection', function(){
             });
         });
 
-        it('inserts the schema with a notifications table', function(done){
-            var mq = new mqlite.Connection();
+        it('inserts the schema with a messages table', function(done){
+            var mq = new Connection();
             mq.listen(function(err){
                 expect(err).to.not.exists;
                 var db = mq._db;
-                mq._db.get('SELECT 1 FROM notifications', function(err, row) {
+                mq._db.get('SELECT 1 FROM messages', function(err, row) {
                     expect(err).to.not.exists;
                     expect(row).to.not.be.ok;
                     setTimeout(function(){
@@ -36,7 +36,7 @@ describe('Connection', function(){
         });
 
         it('and closes the database', function(done){
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
             mq.listen(function(err){
                 expect(err).to.not.exists;
                 var db = mq._db;
@@ -53,7 +53,7 @@ describe('Connection', function(){
 
         it('creates the database', function(done){
             var filename = 'test.db';
-            var mq = new mqlite.Connection(filename);
+            var mq = new Connection(filename);
             mq.listen(function(err){
                 expect(err).to.not.exists;
                 expect(mq._db.open).to.be.true;
@@ -63,13 +63,13 @@ describe('Connection', function(){
 
         });
 
-        it('inserts the schema with a notifications table', function(done){
+        it('inserts the schema with a messages table', function(done){
             var filename = 'test.db';
-            var mq = new mqlite.Connection(filename);
+            var mq = new Connection(filename);
             mq.listen(function(err){
                 expect(err).to.not.exists;
                 var db = mq._db;
-                mq._db.get('SELECT 1 FROM notifications', function(err, row) {
+                mq._db.get('SELECT 1 FROM messages', function(err, row) {
                     expect(err).to.not.exists;
                     expect(row).to.not.be.ok;
                     setTimeout(function(){
@@ -82,7 +82,7 @@ describe('Connection', function(){
 
         it('and closes the database', function(done){
             var filename = 'test.db';
-            var mq = new mqlite.Connection(filename);
+            var mq = new Connection(filename);
             mq.listen(function(err){
                 expect(err).to.not.exists;
                 var db = mq._db;
@@ -95,13 +95,13 @@ describe('Connection', function(){
         });
     });
 
-    describe('stores notifications', function(){
+    describe('stores messages', function(){
         it('with the default encoder', function(done){
             var topic = 'test-topic';
             var format = 'unknown';
             var payload = {foo: 'foo-test'};
 
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
 
             async.waterfall([
                 function(callback) {
@@ -112,7 +112,7 @@ describe('Connection', function(){
                 },
                 function(uuid, callback) {
                     var db = mq._db;
-                    db.get('SELECT topic, payload FROM notifications WHERE uuid = ?', uuid, function(err, row) {
+                    db.get('SELECT topic, payload FROM messages WHERE uuid = ?', uuid, function(err, row) {
                         if(err){
                             callback(err);
                         } else {
@@ -143,7 +143,7 @@ describe('Connection', function(){
             var format = 'custom';
             var payload = {foo: 'foo-test'};
 
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
             mq.encoders = { 'custom' : function(obj) {
                 return "1" + JSON.stringify(obj);
             }};
@@ -160,7 +160,7 @@ describe('Connection', function(){
                 },
                 function(uuid, callback) {
                     var db = mq._db;
-                    db.get('SELECT topic, payload FROM notifications WHERE uuid = ?', uuid, function(err, row) {
+                    db.get('SELECT topic, payload FROM messages WHERE uuid = ?', uuid, function(err, row) {
                         if(err){
                             callback(err);
                         } else {
@@ -187,7 +187,7 @@ describe('Connection', function(){
         });    
     });
 
-    describe('retrieves notifications', function(){
+    describe('retrieves messages', function(){
         it('with the default decoder', function(done){
             var topic = 'test-topic';
             var format = 'unknown';
@@ -196,7 +196,7 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
 
             async.waterfall([
                 function(callback) {
@@ -205,7 +205,7 @@ describe('Connection', function(){
                 function(callback) {
                     var db = mq._db;
                     db.run(
-                        'INSERT INTO notifications (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
+                        'INSERT INTO messages (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
                         uuid, topic, timestamp, format, JSON.stringify(payload), callback
                     );
                 },
@@ -257,7 +257,7 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
             mq.encoders = { 'custom' : function(obj) {
                 return "1" + JSON.stringify(obj);
             }};
@@ -272,7 +272,7 @@ describe('Connection', function(){
                 function(callback) {
                     var db = mq._db;
                     db.run(
-                        'INSERT INTO notifications (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
+                        'INSERT INTO messages (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
                         uuid, topic, timestamp, format, mq.encoders.custom(payload), callback
                     );
                 },
@@ -320,7 +320,7 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
 
             function get(callback) {
                 mq.get(topic, limit, true, callback);
@@ -354,7 +354,7 @@ describe('Connection', function(){
                 function(callback) {
                     var db = mq._db;
                     db.run(
-                        'INSERT INTO notifications (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
+                        'INSERT INTO messages (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
                         uuid, topic, timestamp, format, JSON.stringify(payload), callback
                     );
                 },
@@ -380,7 +380,7 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new mqlite.Connection();
+            var mq = new Connection();
 
             async.waterfall([
                 function(callback) {
@@ -389,7 +389,7 @@ describe('Connection', function(){
                 function(callback) {
                     var db = mq._db;
                     db.run(
-                        'INSERT INTO notifications (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
+                        'INSERT INTO messages (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
                         uuid, topic, timestamp, format, JSON.stringify(payload), callback
                     );
                 },
