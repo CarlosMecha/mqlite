@@ -25,13 +25,15 @@ describe('Consumer', function(){
     describe('initializes the consumer', function() {
         it('creates the channel', function(){
             var consumer = new Consumer(conn);
-            expect(consumer._connection.channels).to.equals(1);
+            var id = consumer.channel.id;
+            expect(consumer._connection.channels[id]).to.be.ok;
         });
 
         it('and closes the channel', function(done){
             var consumer = new Consumer(conn);
+            var id = consumer.channel.id;
             consumer.close(function(){
-                expect(consumer._connection.channels).to.equals(0);
+                expect(consumer._connection.channels[id]).to.be.undefined;
                 done();
             });
         });
@@ -49,7 +51,7 @@ describe('Consumer', function(){
 
             async.waterfall([
                 function(callback) {
-                    conn.push(topic, format, payload, callback);
+                    conn._push(topic, format, payload, callback);
                 },
                 function(res, callback) {
                     uuid = res;
@@ -70,7 +72,7 @@ describe('Consumer', function(){
                     setImmediate(callback);
                 },
                 function(callback) {
-                    conn.get(topic, 1, false, callback);
+                    conn._get(topic, 1, false, callback);
                 },
                 function(res, callback) {
                     expect(res).to.have.length(1);
@@ -97,7 +99,7 @@ describe('Consumer', function(){
 
             async.waterfall([
                 function(callback) {
-                    conn.push(topic, format, payload, callback);
+                    conn._push(topic, format, payload, callback);
                 },
                 function(res, callback) {
                     uuid = res;
@@ -143,7 +145,7 @@ describe('Consumer', function(){
 
             async.waterfall([
                 function(callback) {
-                    conn.push(topic, format, payload, callback);
+                    conn._push(topic, format, payload, callback);
                 },
                 function(res, callback) {
                     uuid = res;
@@ -183,7 +185,7 @@ describe('Consumer', function(){
 
             async.waterfall([
                 function(callback) {
-                    conn.push(topic, format, payload, callback);
+                    conn._push(topic, format, payload, callback);
                 },
                 function(res, callback) {
                     uuid = res;

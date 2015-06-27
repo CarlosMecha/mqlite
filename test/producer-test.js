@@ -25,13 +25,15 @@ describe('Publisher', function(){
     describe('initializes the producer', function() {
         it('creates the channel', function(){
             var producer = new Producer(conn);
-            expect(producer._connection.channels).to.equals(1);
+            var id = producer.channel.id;
+            expect(producer._connection.channels[id]).to.be.ok;
         });
 
         it('and closes the channel', function(done){
             var producer = new Producer(conn);
+            var id = producer.channel.id;
             producer.close(function(){
-                expect(producer._connection.channels).to.equals(0);
+                expect(producer._connection.channels[id]).to.be.undefined;
                 done();
             });
         });
@@ -51,7 +53,7 @@ describe('Publisher', function(){
                     producer.publish(message, callback);
                 },
                 function(uuid, callback) {
-                    conn.get(message.headers.topic, 1, false, callback);
+                    conn._get(message.headers.topic, 1, false, callback);
                 },
                 function(res, callback) {
                     expect(res).to.have.length(1);
@@ -95,7 +97,7 @@ describe('Publisher', function(){
                     });
                 },
                 function(uuid, callback) {
-                    conn.get(message.headers.topic, 1, false, callback);
+                    conn._get(message.headers.topic, 1, false, callback);
                 },
                 function(res, callback) {
                     expect(res).to.have.length(1);

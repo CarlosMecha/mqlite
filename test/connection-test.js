@@ -47,12 +47,22 @@ describe('Connection', function(){
                 });
             });
         });
+
+        it('emites the event when listen and closed', function(done){
+            var mq = new Connection();
+            mq.listen();
+            mq.once('listen', function(){
+                mq.close();
+                mq.once('close', done);
+            });
+        });
     });
 
     describe('initializes the persistent database', function() {
 
+        var filename = 'test.db';
+        
         it('creates the database', function(done){
-            var filename = 'test.db';
             var mq = new Connection(filename);
             mq.listen(function(err){
                 expect(err).to.not.exists;
@@ -64,7 +74,6 @@ describe('Connection', function(){
         });
 
         it('inserts the schema with a messages table', function(done){
-            var filename = 'test.db';
             var mq = new Connection(filename);
             mq.listen(function(err){
                 expect(err).to.not.exists;
@@ -81,7 +90,6 @@ describe('Connection', function(){
         });
 
         it('and closes the database', function(done){
-            var filename = 'test.db';
             var mq = new Connection(filename);
             mq.listen(function(err){
                 expect(err).to.not.exists;
@@ -93,22 +101,40 @@ describe('Connection', function(){
                 });
             });
         });
+
+        it('emites the event when listen and closed', function(done){
+            var mq = new Connection(filename);
+            mq.listen();
+            mq.once('listen', function(){
+                mq.close();
+                mq.once('close', done);
+            });
+        });
     });
 
     describe('stores messages', function(){
+
+        var mq = null;
+
+        beforeEach(function(done) {
+            mq = new Connection();
+            mq.listen();
+            mq.once('listen', done);
+        });
+
+        afterEach(function(done) {
+            mq.close();
+            mq.once('close', done);
+        });
+
         it('with the default encoder', function(done){
             var topic = 'test-topic';
             var format = 'unknown';
             var payload = {foo: 'foo-test'};
 
-            var mq = new Connection();
-
             async.waterfall([
                 function(callback) {
-                    mq.listen(callback);
-                },
-                function(callback) {
-                    mq.push(topic, format, payload, callback);
+                    mq._push(topic, format, payload, callback);
                 },
                 function(uuid, callback) {
                     var db = mq._db;
@@ -127,9 +153,6 @@ describe('Connection', function(){
                             callback();
                         }
                     });
-                },
-                function(callback) {
-                    mq.close(callback);
                 }
             ], function(err) {
                 expect(err).to.not.exists;
@@ -143,7 +166,6 @@ describe('Connection', function(){
             var format = 'custom';
             var payload = {foo: 'foo-test'};
 
-            var mq = new Connection();
             mq.encoders = { 'custom' : function(obj) {
                 return "1" + JSON.stringify(obj);
             }};
@@ -153,10 +175,7 @@ describe('Connection', function(){
 
             async.waterfall([
                 function(callback) {
-                    mq.listen(callback);
-                },
-                function(callback) {
-                    mq.push(topic, format, payload, callback);
+                    mq._push(topic, format, payload, callback);
                 },
                 function(uuid, callback) {
                     var db = mq._db;
@@ -175,9 +194,6 @@ describe('Connection', function(){
                             callback();
                         }
                     });
-                },
-                function(callback) {
-                    mq.close(callback);
                 }
             ], function(err) {
                 expect(err).to.not.exists;
@@ -188,6 +204,20 @@ describe('Connection', function(){
     });
 
     describe('retrieves messages', function(){
+
+        var mq = null;
+
+        beforeEach(function(done) {
+            mq = new Connection();
+            mq.listen();
+            mq.once('listen', done);
+        });
+
+        afterEach(function(done) {
+            mq.close();
+            mq.once('close', done);
+        });
+
         it('with the default decoder', function(done){
             var topic = 'test-topic';
             var format = 'unknown';
@@ -196,12 +226,7 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new Connection();
-
             async.waterfall([
-                function(callback) {
-                    mq.listen(callback);
-                },
                 function(callback) {
                     var db = mq._db;
                     db.run(
@@ -210,7 +235,7 @@ describe('Connection', function(){
                     );
                 },
                 function(callback) {
-                    mq.get(topic, limit, true, callback);
+                    mq._get(topic, limit, true, callback);
                 },
                 function(res, callback) {
                     expect(res).to.be.ok;
@@ -233,15 +258,12 @@ describe('Connection', function(){
                     callback();
                 },
                 function(callback) {
-                    mq.get(topic, limit, true, callback);
+                    mq._get(topic, limit, true, callback);
                 },
                 function(res, callback) {
                     expect(res).to.be.ok;
                     expect(res).to.have.length(limit);
                     callback();
-                },
-                function(callback) {
-                    mq.close(callback);
                 }
             ], function(err) {
                 expect(err).to.not.exists;
@@ -257,7 +279,6 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new Connection();
             mq.encoders = { 'custom' : function(obj) {
                 return "1" + JSON.stringify(obj);
             }};
@@ -277,7 +298,7 @@ describe('Connection', function(){
                     );
                 },
                 function(callback) {
-                    mq.get(topic, limit, true, callback);
+                    mq._get(topic, limit, true, callback);
                 },
                 function(res, callback) {
                     expect(res).to.be.ok;
@@ -296,15 +317,12 @@ describe('Connection', function(){
                     callback();
                 },
                 function(callback) {
-                    mq.get(topic, limit, true, callback);
+                    mq._get(topic, limit, true, callback);
                 },
                 function(res, callback) {
                     expect(res).to.be.ok;
                     expect(res).to.have.length(limit);
                     callback();
-                },
-                function(callback) {
-                    mq.close(callback);
                 }
             ], function(err) {
                 expect(err).to.not.exists;
@@ -320,10 +338,8 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new Connection();
-
             function get(callback) {
-                mq.get(topic, limit, true, callback);
+                mq._get(topic, limit, true, callback);
             }
 
             function check(res, callback) {
@@ -349,9 +365,6 @@ describe('Connection', function(){
 
             async.waterfall([
                 function(callback) {
-                    mq.listen(callback);
-                },
-                function(callback) {
                     var db = mq._db;
                     db.run(
                         'INSERT INTO messages (uuid, topic, timestamp, format, payload) VALUES (?, ?, ?, ?, ?)',
@@ -361,10 +374,7 @@ describe('Connection', function(){
                 get,
                 check,
                 get,
-                check,
-                function(callback) {
-                    mq.close(callback);
-                }
+                check
             ], function(err) {
                 expect(err).to.not.exists;
                 done();
@@ -380,12 +390,7 @@ describe('Connection', function(){
             var timestamp = Date.now();
             var limit = 1;
 
-            var mq = new Connection();
-
             async.waterfall([
-                function(callback) {
-                    mq.listen(callback);
-                },
                 function(callback) {
                     var db = mq._db;
                     db.run(
@@ -394,7 +399,7 @@ describe('Connection', function(){
                     );
                 },
                 function(callback) {
-                    mq.get(topic, limit, false, callback);
+                    mq._get(topic, limit, false, callback);
                 },
                 function(res, callback) {
                     expect(res).to.be.ok;
@@ -417,15 +422,12 @@ describe('Connection', function(){
                     callback();
                 },
                 function(callback) {
-                    mq.get(topic, limit, true, callback);
+                    mq._get(topic, limit, true, callback);
                 },
                 function(res, callback) {
                     expect(res).to.be.ok;
                     expect(res).to.have.length(0);
                     callback();
-                },
-                function(callback) {
-                    mq.close(callback);
                 }
             ], function(err) {
                 expect(err).to.not.exists;
