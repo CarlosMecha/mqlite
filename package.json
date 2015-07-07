@@ -1,8 +1,8 @@
 {
   "name": "mqlite",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "A SQLite3 wrapper to mock a MQ Service.",
-  "main": "mq.js",
+  "main": "mqlite.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec"
   },
@@ -24,9 +24,11 @@
   "homepage": "https://github.com/CarlosMecha/mqlite#readme",
   "dependencies": {
     "async": "^1.2.1",
-    "chai": "^3.0.0",
-    "mocha": "^2.2.5",
     "node-uuid": "^1.4.3",
     "sqlite3": "^3.0.8"
+  },
+  "devDependencies": {
+    "chai": "^3.0.0",
+    "mocha": "^2.2.5"
   }
 }
